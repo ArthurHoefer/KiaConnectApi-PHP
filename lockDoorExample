@@ -1,0 +1,29 @@
+<?php
+// Replace with your actual Kia account username and password
+$username = 'your_username';
+$password = 'your_password';
+
+// Create an instance of the KiaAPI class
+$kiaAPI = new KiaAPI($username, $password);
+
+// Login to obtain the VIN key
+$vinkey = $kiaAPI->login();
+
+// Check if the login was successful
+if ($vinkey !== null) {
+    // Build the JSON payload for the lock doors command
+    $command = KiaCommandBuilder::buildAction('1');
+
+    // Send the command to lock the doors
+    $response = $kiaAPI->sendCommand($vinkey, $command);
+
+    // Check if the command was successful
+    if (strpos($response, 'statusCode') !== false && strpos($response, '1') !== false) {
+        echo "Doors locked successfully.";
+    } else {
+        echo "Failed to lock doors.";
+    }
+} else {
+    echo "Login failed. Invalid credentials.";
+}
+?>
