@@ -1,0 +1,86 @@
+if ($_SERVER['REQUEST_METHOD'] === 'GET') {
+    $username = $_GET['username'] ?? '';
+    $password = $_GET['password'] ?? '';
+    $defr = $_GET['defrost'] ?? null;
+    $command = $_GET['command'] ?? '';
+    $temp = isset($_GET['temp']) ? $_GET['temp'] : null;
+
+    if (empty($username) || empty($password) || empty($command)) {
+        writeToLog('Invalid request parameters.', 'ERROR');
+        exit;
+    }
+
+    $hash = hash('sha512', $username . $password);
+    $api = new KiaAPI($username, $password);
+
+    if (!$api->checkRateLimit($hash)) {
+        writeToLog('Rate limit exceeded for user: ' . $username, 'ERROR');
+        echo "rate_limit";
+        exit;
+    }
+
+    if ($command === '6') {
+        $firstrun = true;
+        fir:
+        $locationAPI = new KiaLocationAPI($username, $password);
+        $location = $locationAPI->getLocation();
+
+        if ($location !== null) {
+            $latitude = $location['latitude'];
+            $longitude = $location['longitude'];
+
+            echo $latitude . ',' . $longitude;
+            exit();
+        } else {
+            if ($firstrun) {
+                writeToLog('Failed to retrieve the location, attempting again with new session', 'ERROR');
+                $api->login(true);
+                goto fir;
+                exit;
+            } else
+            {
+                writeToLog('Failed to retrieve the location', 'ERROR');
+            }
+        }
+    } else {
+        $action = KiaCommandBuilder::buildAction($command, $temp, $defr);
+
+        if ($action === false) {
+            writeToLog('Invalid command.', 'ERROR');
+            exit;
+        }
+
+        try {
+            $vinkey = $api->login();
+            $response = $api->sendCommand($vinkey, $action);
+
+            if ($api->checkDailyCommandLimit($response)) {
+                writeToLog('Daily command limit reached for user: ' . $username);
+                $api->updateRateLimit($hash);
+                exit;
+            }
+
+            if (strpos($response, 'Success') !== false) {
+                $api->updateRateLimit($hash);
+                writeToLog('Command executed successfully', 'SUCCESS');
+                echo "successful";
+                exit();
+            } else {
+                writeToLog('Command execution failed. Attempting to login again.');
+                $vinkey = $api->login(true);
+                $response = $api->sendCommand($vinkey, $action);
+
+                if (strpos($response, 'Success') !== false) {
+                    $api->updateRateLimit($hash);
+                    writeToLog('Successful command execution after re-login.', 'SUCCESS');
+                    echo "successful";
+                    exit();
+                } else {
+                    writeToLog('Command execution failed after re-login.', 'ERROR');
+                }
+            }
+        } catch (Exception $e) {
+            writeToLog('An error occurred: ' . $e->getMessage(), 'ERROR');
+        }
+    }
+}
