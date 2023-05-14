@@ -1,131 +1,89 @@
-# Kia API Wrapper
+# Kia API
 
-This is a PHP code snippet that serves as a wrapper for the Kia API, allowing you to interact with your Kia vehicle programmatically. It provides functionality for retrieving the vehicle's location, executing remote commands (such as locking/unlocking doors and starting climate control), and checking rate limits.
+This repository contains PHP code for interacting with the Kia API to perform various actions on a Kia vehicle, such as retrieving the vehicle location, locking/unlocking doors, and controlling the climate.
 
 ## Prerequisites
 
 Before using this code, make sure you have the following:
 
-- PHP installed on your server or local development environment.
-- Kia vehicle owner account credentials.
-- A valid `client.config` file (for storing encrypted authentication data) (will be generated automatically).
+- PHP installed on your server or local environment.
+- The required PHP extensions: `curl` and `openssl`.
 
 ## Getting Started
 
-1. Clone or download the code to your local machine or server.
-2. Set the `$logDirectory` variable to specify the directory where log files will be stored.
-3. Set the `$logFilename` variable to specify the filename of the log file (it includes the date).
-4. Set the `$configFile` variable to specify the path and filename of the `client.config` file.
-5. Set the `$encryptionKey` variable to a strong encryption key for encrypting sensitive data.
-6. Ensure that the log directory exists by running the code block responsible for creating it (`mkdir` function).
-7. Include the necessary dependencies and classes in your PHP file:
+1. Clone this repository to your local machine or server:
 
-```php
-require_once 'path/to/KiaAPI.php';
-require_once 'path/to/KiaLocationAPI.php';
-require_once 'path/to/KiaCommandBuilder.php';
-```
+   ```
+   git clone https://github.com/your-username/kia-api.git
+   ```
 
-8. Initialize the KiaAPI class with your Kia owner account credentials:
+2. Update the following variables in the code:
 
-```php
-$api = new KiaAPI($username, $password);
-```
+   - `$logDirectory`: The directory where log files will be stored.
+   - `$configFile`: The file path for storing user configurations.
+   - `$encryptionKey`: A secret key used for encrypting/decrypting sensitive data.
+
+3. Create the log directory if it doesn't exist:
+
+   ```shell
+   mkdir logs/
+   ```
 
 ## Usage
 
-### Retrieving Vehicle Location
+To use the Kia API, you can make GET requests to the PHP script with the required parameters.
 
-To retrieve the current location of your Kia vehicle, use the `getLocation` method of the `KiaLocationAPI` class:
+### Available Commands
 
-```php
-$locationAPI = new KiaLocationAPI($username, $password);
-$location = $locationAPI->getLocation();
+- `command`: The command to execute. Possible values are:
+  - `1`: Lock Doors
+  - `2`: Unlock Doors
+  - `3`: Start Climate Control
+  - `5`: Get Vehicle Status
+  - `6`: Get Vehicle Location
 
-if ($location !== null) {
-    $latitude = $location['latitude'];
-    $longitude = $location['longitude'];
-    // Use latitude and longitude as needed
-} else {
-    // Failed to retrieve the location
-}
+### Example Request
+
+```shell
+GET /kia-api/api.php?username=your-username&password=your-password&command=1
 ```
 
-### Sending Remote Commands
+### Response
 
-To send remote commands to your Kia vehicle (e.g., lock/unlock doors, start climate control), use the `sendCommand` method of the `KiaAPI` class. The `KiaCommandBuilder` class provides a convenient way to build the command payload.
+The API will return the following responses:
 
-```php
-$action = KiaCommandBuilder::buildAction($command, $temp, $defr);
-
-try {
-    $vinkey = $api->login();
-    $response = $api->sendCommand($vinkey, $action);
-
-    if (strpos($response, 'Success') !== false) {
-        // Command executed successfully
-    } else {
-        // Command execution failed
-    }
-} catch (Exception $e) {
-    // An error occurred
-}
-```
-
-Replace `$command` with the desired command code (e.g., '1' for lock doors, '2' for unlock doors), and optionally provide the `$temp` and `$defr` parameters for climate control commands.
-
-### Handling Rate Limits
-
-The code includes functionality for checking and updating rate limits. The `checkRateLimit` method checks if the rate limit for a given user has been exceeded, and the `updateRateLimit` method updates the rate limit status after a command has been sent.
-
-```php
-$hash = hash('sha512', $username . $password);
-
-if (!$api->checkRateLimit($hash)) {
-    // Rate limit exceeded
-} else {
-    // Rate limit not exceeded
-    // Send command and update rate limit
-    $api->updateRateLimit($hash);
-}
-```
+- `successful`: The command was executed successfully.
+- `rate_limit`: The rate limit for the user has been exceeded.
 
 ## Logging
 
-The code provides basic logging functionality to record important events and errors in a log file. The log file is created in the specified `$logDirectory` with the filename `$logFilename` appended with the current date.
+The API logs various events to a log file. The log file is stored in the specified `$logDirectory` and has a name in the format `YYYY-MM-DD.log`.
 
-To write log messages, you can use the `writeToLog` function:
+## Security Considerations
 
-```php
-writeToLog($message, $level);
-```
+When using the Kia API, it's important to consider security measures to protect sensitive information and prevent unauthorized access. Here are a few recommendations:
 
-- The `$message` parameter is the content of the log message.
-- The `$level` parameter is optional and represents the log level (e.g., INFO, ERROR). It defaults to INFO if not specified.
+- **Keep the encryption key secure**: The `$encryptionKey` variable should be kept confidential and not shared or exposed in any way. Make sure to choose a strong encryption key and store it securely.
 
-## Encryption
+- **Protect user credentials**: Ensure that user credentials (username and password) are transmitted securely over HTTPS and not exposed in the URL or request headers.
 
-Sensitive data, such as authentication tokens and cookies, are encrypted using AES-256-CBC encryption. The encryption key is provided in the `$encryptionKey` variable.
+- **Secure server environment**: If hosting the PHP script on a server, make sure it has proper security measures in place, such as firewall configurations, regular security updates, and restricted access to sensitive files.
 
-To encrypt and decrypt data, you can use the `encryptData` and `decryptData` functions:
+- **Access control**: Implement access controls and user authentication mechanisms to restrict access to the API and its functionality. Only authorized users should be allowed to interact with the API.
 
-```php
-$encryptedData = encryptData($data);
-$decryptedData = decryptData($encryptedData);
-```
+- **Input validation**: Validate and sanitize user input to prevent potential security vulnerabilities such as SQL injection or cross-site scripting (XSS) attacks.
 
-- The `$data` parameter is the data to be encrypted or decrypted.
 
-## Running the Code
+## Disclaimer
 
-To use the code, follow these steps:
+This project is not affiliated with or endorsed by Kia Motors. It is an independent implementation based on publicly available information.
 
-1. Ensure you have PHP installed on your server or local machine.
-2. Copy the code to a PHP file (e.g., `kia-api.php`).
-3. Modify the necessary variables and settings in the code, as explained earlier.
-4. Include the required dependencies and classes in your PHP file using the appropriate paths.
-5. Use the provided classes and methods to interact with the Kia API according to your needs.
+Please note that using the Kia API may have limitations and potential risks. Make sure to comply with Kia's terms of service and use the API responsibly and within the boundaries defined by Kia.
 
-Remember to handle exceptions appropriately and customize the code according to your application's requirements.
+## License
 
-Please note that this code is intended as a starting point and may require modifications or enhancements based on your specific use case.
+This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
+
+---
+
+Thank you for using the Kia API! If you have any further questions or need assistance, please don't hesitate to ask.
