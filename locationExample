@@ -1,0 +1,19 @@
+// Assume the user provides their Kia account credentials
+$username = 'your_kia_username';
+$password = 'your_kia_password';
+
+// Create an instance of the KiaLocationAPI class
+$kiaLocationAPI = new KiaLocationAPI($username, $password);
+
+// Retrieve the location of the vehicle
+$location = $kiaLocationAPI->getLocation();
+
+if ($location !== null) {
+    $latitude = $location['latitude'];
+    $longitude = $location['longitude'];
+
+    // Display the latitude and longitude to the user
+    echo "Vehicle Location: Latitude $latitude, Longitude $longitude";
+} else {
+    echo "Failed to retrieve vehicle location.";
+}
