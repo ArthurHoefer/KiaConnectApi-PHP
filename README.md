@@ -1,89 +1,139 @@
-# Kia API
+# Kia API Client
 
-This repository contains PHP code for interacting with the Kia API to perform various actions on a Kia vehicle, such as retrieving the vehicle location, locking/unlocking doors, and controlling the climate.
+This is a PHP client for interacting with the Kia API. It provides methods for retrieving vehicle location and sending commands such as locking/unlocking doors and starting climate control.
 
 ## Prerequisites
 
-Before using this code, make sure you have the following:
+- PHP 7.0 or higher
+- cURL extension enabled
 
-- PHP installed on your server or local environment.
-- The required PHP extensions: `curl` and `openssl`.
+## Installation
 
-## Getting Started
+1. Clone the repository or download the source code.
+2. Place the `kia.php` file in your project directory.
 
-1. Clone this repository to your local machine or server:
+## Configuration
 
-   ```
-   git clone https://github.com/your-username/kia-api.git
-   ```
+Before using the client, you need to set up the following configuration:
 
-2. Update the following variables in the code:
+1. Set the log directory: Edit the `$logDirectory` variable in the `kia.php` file to specify the directory where log files will be stored.
 
-   - `$logDirectory`: The directory where log files will be stored.
-   - `$configFile`: The file path for storing user configurations.
-   - `$encryptionKey`: A secret key used for encrypting/decrypting sensitive data.
+```php
+$logDirectory = 'logs/';
+```
 
-3. Create the log directory if it doesn't exist:
+2. Set the encryption key: Edit the `$encryptionKey` variable in the `kia.php` file to specify the encryption key used for encrypting and decrypting sensitive data.
 
-   ```shell
-   mkdir logs/
-   ```
+```php
+$encryptionKey = 'your_encryption_key';
+```
+
+3. Set the client configuration file: Edit the `$configFile` variable in the `kia.php` file to specify the file where client configuration data will be stored.
+
+```php
+$configFile = 'client.config';
+```
 
 ## Usage
 
-To use the Kia API, you can make GET requests to the PHP script with the required parameters.
+To use the Kia API client, follow these steps:
 
-### Available Commands
+1. Create an instance of the `KiaAPI` class by providing your Kia username and password.
 
-- `command`: The command to execute. Possible values are:
-  - `1`: Lock Doors
-  - `2`: Unlock Doors
-  - `3`: Start Climate Control
-  - `5`: Get Vehicle Status
-  - `6`: Get Vehicle Location
-
-### Example Request
-
-```shell
-GET /kia-api/api.php?username=your-username&password=your-password&command=1
+```php
+$api = new KiaAPI($username, $password);
 ```
 
-### Response
+2. Call the `getLocation()` method of the `KiaLocationAPI` class to retrieve the vehicle's latitude and longitude.
 
-The API will return the following responses:
+```php
+$locationAPI = new KiaLocationAPI($username, $password);
+$location = $locationAPI->getLocation();
 
-- `successful`: The command was executed successfully.
-- `rate_limit`: The rate limit for the user has been exceeded.
+if ($location !== null) {
+    $latitude = $location['latitude'];
+    $longitude = $location['longitude'];
+    // Use the latitude and longitude values
+} else {
+    // Failed to retrieve the location
+}
+```
+
+3. Call the `sendCommand($vinkey, $action)` method of the `KiaAPI` class to send a command to the vehicle. The `$vinkey` parameter is obtained from the `login()` method.
+
+```php
+$vinkey = $api->login();
+$response = $api->sendCommand($vinkey, $action);
+
+if (strpos($response, 'Success') !== false) {
+    // Command executed successfully
+} else {
+    // Command execution failed
+}
+```
+
+4. Customize and use the `KiaCommandBuilder` class to build commands easily. For example, to build a command to lock the doors:
+
+```php
+$command = KiaCommandBuilder::buildAction('1');
+```
+
+## Error Handling
+
+Exceptions may be thrown during the execution of API requests. You can use a try-catch block to handle these exceptions:
+
+```php
+try {
+    // API code
+} catch (Exception $e) {
+    // Handle the exception
+}
+```
 
 ## Logging
 
-The API logs various events to a log file. The log file is stored in the specified `$logDirectory` and has a name in the format `YYYY-MM-DD.log`.
+The client logs information and errors to log files. The log directory is specified in the `$logDirectory` variable. Log files are created daily with the format `YYYY-MM-DD.log`.
 
-## Security Considerations
+To write a log message, use the `writeToLog($message, $level)` function:
 
-When using the Kia API, it's important to consider security measures to protect sensitive information and prevent unauthorized access. Here are a few recommendations:
+```php
+writeToLog('Log message', 'LEVEL');
+```
 
-- **Keep the encryption key secure**: The `$encryptionKey` variable should be kept confidential and not shared or exposed in any way. Make sure to choose a strong encryption key and store it securely.
+The `$message` parameter represents the log message, and the `$level` parameter represents the log level (e.g., INFO, ERROR, SUCCESS). The log message will be appended to the log file with the specified level and timestamp.
 
-- **Protect user credentials**: Ensure that user credentials (username and password) are transmitted securely over HTTPS and not exposed in the URL or request headers.
+## Rate Limiting
 
-- **Secure server environment**: If hosting the PHP script on a server, make sure it has proper security measures in place, such as firewall configurations, regular security updates, and restricted access to sensitive files.
+The client includes rate limiting functionality to prevent excessive API requests. By default, a user is limited to 5 commands per hour. The rate limit is stored in the client configuration file.
 
-- **Access control**: Implement access controls and user authentication mechanisms to restrict access to the API and its functionality. Only authorized users should be allowed to interact with the API.
+To check the rate limit for a user, use the `checkRateLimit($hash)` method:
 
-- **Input validation**: Validate and sanitize user input to prevent potential security vulnerabilities such as SQL injection or cross-site scripting (XSS) attacks.
+```php
+$hash = hash('sha512', $username . $password);
+$api->checkRateLimit($hash);
+```
 
+To update the rate limit after a successful command execution, use the `updateRateLimit($hash)` method:
 
-## Disclaimer
+```php
+$api->updateRateLimit($hash);
+```
 
-This project is not affiliated with or endorsed by Kia Motors. It is an independent implementation based on publicly available information.
+## Daily Command Limit
 
-Please note that using the Kia API may have limitations and potential risks. Make sure to comply with Kia's terms of service and use the API responsibly and within the boundaries defined by Kia.
+The Kia API has a daily command limit. If the command limit is reached, the API will return an error response indicating the limit has been exceeded. The client includes a method to check for this limit:
+
+```php
+$response = $api->sendCommand($vinkey, $action);
+$api->checkDailyCommandLimit($response);
+```
+
+The `checkDailyCommandLimit($response)` method returns `true` if the daily command limit has been reached and `false` otherwise.
+
+## Security
+
+The client encrypts sensitive data using AES-256-CBC encryption with the provided encryption key. The `encryptData($data)` and `decryptData($encryptedData)` functions are used for encryption and decryption, respectively.
 
 ## License
 
-This project is licensed under the MIT License. See the [LICENSE](LICENSE) file for more details.
-
----
-
-Thank you for using the Kia API! If you have any further questions or need assistance, please don't hesitate to ask.
+This client is licensed under the MIT License. See the `LICENSE` file for more information.
