@@ -8,7 +8,7 @@ Before using this code, make sure you have the following:
 
 - PHP installed on your server or local development environment.
 - Kia vehicle owner account credentials.
-- A valid `client.config` file (for storing encrypted authentication data).
+- A valid `client.config` file (for storing encrypted authentication data) (will be generated automatically).
 
 ## Getting Started
 
