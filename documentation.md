@@ -102,14 +102,14 @@ try {
     $kiaAPI = new KiaAPI('myUsername', 'myPassword');
     $vinKey = $kiaAPI->login();
 ```php
-    $response = $kiaAPI->sendCommand($vinKey, KiaCommandBuilder::buildAction('start'));
+    $response = $kiaAPI->sendCommand($vinKey, KiaCommandBuilder::buildAction('1'));
     print_r($response);
 } catch (Exception $e) {
     echo 'Error: ' . $e->getMessage();
 }
 ```
 
-This code will attempt to start the vehicle and print the response. If an error occurs, it will print the error message.
+This code will attempt to lock the vehicle and print the response. If an error occurs, it will print the error message.
 
 
 This documentation is provided "as is" without warranty of any kind, either express or implied, including without limitation warranties of merchantability, fitness for a particular purpose, and non-infringement. Use of this documentation and the corresponding Kia API Wrapper Library is at your own risk.
