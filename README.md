@@ -6,7 +6,7 @@
 
 The Kia API library is a PHP library that allows you to interact with the Kia API, enabling you to retrieve vehicle location and send commands such as locking/unlocking doors and starting climate control. This PHP library is specifically designed for use in the United States, providing seamless integration with Kia vehicles in this region.
 
-This is a side project I created because I needed to interact with Kia Connect in PHP and all the Kia api library's that already exist are for different languages, so I decided to reverse engineer the api and create my own.
+This is a side project I created because I needed to interact with Kia Connect in PHP and all the Kia api libraries that already exist are for different languages, so I decided to reverse engineer the api and create my own.
 
 Whenever I think of new stuff to add or I find bugs i'll update the project.
 ## Requirements
