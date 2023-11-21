@@ -8,7 +8,7 @@ The Kia API library is a PHP library that allows you to interact with the Kia AP
 
 This is a side project I created because I needed to interact with Kia Connect in PHP because the official Kia Connect app sucks so I wanted to create my own. All the Kia API libraries that already exist are for different languages, so I decided to reverse engineer the API and create my own.
 
-## 11/21/2023 l: Kia recently changed how their login process works which broke this library. I am currently investigating and will release a fix when I reverse engineer the new login system.
+## 11/21/2023: Kia recently changed how their login process works which broke this library. I am currently investigating and will release a fix when I reverse engineer the new login system.
 
 Whenever I think of new stuff to add or I find bugs i'll update the project.
 ## Requirements
